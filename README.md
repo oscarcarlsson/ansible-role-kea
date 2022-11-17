@@ -1,5 +1,7 @@
 # Ansible Role: ISC Kea DHCP
-Install and configure ISC Kea DHCP server.
+Install and configure ISC Kea DHCP server.  Very similar to
+[mrlesmithjr/ansible-kea-dhcp](https://github.com/mrlesmithjr/ansible-kea-dhcp),
+but works on FreeBSD as well.
 
 ## Requirements
 An Ansible 2.2 or higher installation.
