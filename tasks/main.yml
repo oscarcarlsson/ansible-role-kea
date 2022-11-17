@@ -1,0 +1,7 @@
+---
+- name: Set FreeBSD specific variables
+  ansible.builtin.include_vars: "FreeBSD.yml"
+  when: ansible_os_family == "FreeBSD"
+
+- name: Run OS specific flows
+  ansible.builtin.include_tasks: "setup-{{ ansible_os_family }}.yml"

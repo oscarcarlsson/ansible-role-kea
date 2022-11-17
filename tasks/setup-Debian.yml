@@ -1,0 +1,119 @@
+# install deps
+- name: Ensure the official kea repository is enabled
+  ansible.builtin.apt_repository:
+    repo: "{{ kea_apt_repository }}"
+    state: present
+  tags: setup
+
+- name: Ensure the official kea src repository is enabled
+  ansible.builtin.apt_repository:
+    repo: "{{ kea_apt_src_repository }}"
+    state: present
+  tags: setup
+
+- name: Install kea packages
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ kea_packages }}"
+  tags: setup
+
+- name: Enable/disable DHCP4 service
+  ansible.builtin.service:
+    name: "{{ kea_dhcp4_svc }}"
+    enabled: "{{ kea_dhcp4_enable }}"
+  tags: setup
+
+- name: Enable/disable DHCP6 service
+  ansible.builtin.service:
+    name: "{{ kea_dhcp6_svc }}"
+    enabled: "{{ kea_dhcp6_enable }}"
+  tags: setup
+
+- name: Enable/disable DDNS service
+  ansible.builtin.service:
+    name: "{{ kea_ddns_svc }}"
+    enabled: "{{ kea_ddns_enable }}"
+  tags: setup
+
+- name: Enable/disable ctrl agent service
+  ansible.builtin.service:
+    name: "{{ kea_ctrl_agent_svc }}"
+    enabled: "{{ kea_ctrl_agent_enable }}"
+  tags: setup
+
+- name: Install dhcp4 configuration
+  ansible.builtin.template:
+    src: "kea-dhcp4.conf.j2"
+    dest: "{{ kea_config_path }}/kea-dhcp4.conf"
+    validate: "kea-dhcp4 -t %s"
+    mode: "0640"
+    owner: "{{ kea_user }}"
+    group: "{{ kea_group }}"
+  when: kea_dhcp4_enable
+  notify:
+    - 'Kea dhcp4 reload'
+  tags: configuration
+
+- name: Install dhcp6 configuration
+  ansible.builtin.template:
+    src: "kea-dhcp6.conf.j2"
+    dest: "{{ kea_config_path }}/kea-dhcp6.conf"
+    validate: "kea-dhcp6 -t %s"
+    mode: "0640"
+    owner: "{{ kea_user }}"
+    group: "{{ kea_group }}"
+  when: kea_dhcp6_enable
+  notify:
+    - 'Kea dhcp6 reload'
+  tags: configuration
+
+- name: Install ddns configuration
+  ansible.builtin.template:
+    src: "kea-dhcp-ddns.conf.j2"
+    dest: "{{ kea_config_path }}/kea-dhcp-ddns.conf"
+    validate: "kea-dhcp-ddns -t %s"
+    mode: "0640"
+    owner: "{{ kea_user }}"
+    group: "{{ kea_group }}"
+  when: kea_ddns_enable
+  notify:
+    - 'Kea ddns reload'
+  tags: configuration
+
+- name: Install control agent configuration
+  ansible.builtin.template:
+    src: "kea-ctrl-agent.conf.j2"
+    dest: "{{ kea_config_path }}/kea-ctrl-agent.conf"
+    validate: "kea-ctrl-agent -t %s"
+    mode: "0640"
+    owner: "{{ kea_user }}"
+    group: "{{ kea_group }}"
+  when: kea_ctrl_agent_enable
+  notify:
+    - 'Kea ctrl agent reload'
+  tags: configuration
+
+- name: Make sure kea dhcp4 is running (if first setup)
+  ansible.builtin.service:
+    name: "{{ kea_dhcp4_svc }}"
+    state: started
+  when: kea_dhcp4_enable
+
+- name: Make sure kea dhcp6 is running (if first setup)
+  ansible.builtin.service:
+    name: "{{ kea_dhcp6_svc }}"
+    state: started
+  when: kea_dhcp6_enable
+
+- name: Make sure kea ddns is running (if first setup)
+  ansible.builtin.service:
+    name: "{{ kea_ddns_svc }}"
+    state: started
+  when: kea_ddns_enable
+
+- name: Make sure kea ctrl agent is running (if first setup)
+  ansible.builtin.service:
+    name: "{{ kea_ctrl_agent_svc }}"
+    state: started
+  when: kea_ctrl_agent_enable

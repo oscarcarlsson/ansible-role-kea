@@ -1,0 +1,9 @@
+---
+kea_config_path: "/usr/local/etc/kea"
+
+# I couldn't find any kea user for FreeBSD, maybe time to submit a bug?
+kea_user: "root"
+kea_group: "wheel"
+
+kea_packages:
+  - kea

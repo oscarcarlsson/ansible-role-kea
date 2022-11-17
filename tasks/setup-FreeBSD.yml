@@ -1,0 +1,129 @@
+---
+- name: Install dependencies
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ kea_packages }}"
+  tags: setup
+
+- name: Enable service
+  ansible.builtin.service:
+    name: "kea"
+    enabled: true
+  tags: setup
+
+- name: Install dhcp4 configuration
+  ansible.builtin.template:
+    src: "kea-dhcp4.conf.j2"
+    dest: "{{ kea_config_path }}/kea-dhcp4.conf"
+    validate: "kea-dhcp4 -t %s"
+    mode: "0640"
+    owner: "{{ kea_user }}"
+    group: "{{ kea_group }}"
+  when: kea_dhcp4_enable
+  notify:
+    - 'kea reload'
+  tags: configuration
+
+- name: Install dhcp6 configuration
+  ansible.builtin.template:
+    src: "kea-dhcp6.conf.j2"
+    dest: "{{ kea_config_path }}/kea-dhcp6.conf"
+    validate: "kea-dhcp6 -t %s"
+    mode: "0640"
+    owner: "{{ kea_user }}"
+    group: "{{ kea_group }}"
+  when: kea_dhcp6_enable
+  notify:
+    - 'kea reload'
+  tags: configuration
+
+- name: Install d2 configuration
+  ansible.builtin.template:
+    src: "kea-dhcp-ddns.conf.j2"
+    dest: "{{ kea_config_path }}/kea-dhcp-ddns.conf"
+    validate: "kea-dhcp-ddns -t %s"
+    mode: "0640"
+    owner: "{{ kea_user }}"
+    group: "{{ kea_group }}"
+  when: kea_ddns_enable
+  notify:
+    - 'kea reload'
+  tags: configuration
+
+- name: Enable d2 in keactrl.conf
+  ansible.builtin.lineinfile:
+    path: "/usr/local/etc/kea/keactrl.conf"
+    regexp: "^dhcp_ddns="
+    line: "dhcp_ddns=yes"
+  when: kea_ddns_enable
+  notify:
+    - 'kea reload'
+
+- name: Disable d2 in keactrl.conf
+  ansible.builtin.lineinfile:
+    path: "/usr/local/etc/kea/keactrl.conf"
+    regexp: "^dhcp_ddns="
+    line: "dhcp_ddns=no"
+  when: not kea_ddns_enable
+  notify:
+    - 'kea reload'
+
+- name: Enable dhcp4 in keactrl.conf
+  ansible.builtin.lineinfile:
+    path: "/usr/local/etc/kea/keactrl.conf"
+    regexp: "^dhcp4="
+    line: "dhcp4=yes"
+  when: kea_dhcp4_enable
+  notify:
+    - 'kea reload'
+
+- name: Disable dhcp4 in keactrl.conf
+  ansible.builtin.lineinfile:
+    path: "/usr/local/etc/kea/keactrl.conf"
+    regexp: "^dhcp4="
+    line: "dhcp4=no"
+  when: not kea_dhcp4_enable
+  notify:
+    - 'kea reload'
+
+- name: Enable dhcp6 in keactrl.conf
+  ansible.builtin.lineinfile:
+    path: "/usr/local/etc/kea/keactrl.conf"
+    regexp: "^dhcp6="
+    line: "dhcp6=yes"
+  when: kea_ddns_enable
+  notify:
+    - 'kea reload'
+
+- name: Disalbe dhcp6 in keactrl.conf
+  ansible.builtin.lineinfile:
+    path: "/usr/local/etc/kea/keactrl.conf"
+    regexp: "^dhcp6="
+    line: "dhcp6=no"
+  when: not kea_ddns_enable
+  notify:
+    - 'kea reload'
+
+- name: Enable ctrl_agent in keactrl.conf
+  ansible.builtin.lineinfile:
+    path: "/usr/local/etc/kea/keactrl.conf"
+    regexp: "^ctrl_agent="
+    line: "ctrl_agent=yes"
+  when: kea_ctrl_agent_enable
+  notify:
+    - 'kea reload'
+
+- name: Disable ctrl_agent in keactrl.conf
+  ansible.builtin.lineinfile:
+    path: "/usr/local/etc/kea/keactrl.conf"
+    regexp: "^ctrl_agent="
+    line: "ctrl_agent=no"
+  when: not kea_ctrl_agent_enable
+  notify:
+    - 'kea reload'
+
+- name: Make sure kea is running (if first setup)
+  ansible.builtin.service:
+    name: "kea"
+    state: started

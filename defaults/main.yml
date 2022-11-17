@@ -1,0 +1,166 @@
+---
+kea_dhcp4_svc: 'isc-kea-dhcp4-server.service'
+kea_dhcp6_svc: 'isc-kea-dhcp6-server.service'
+kea_ddns_svc: 'isc-kea-dhcp-ddns-server.service'
+kea_ctrl_agent_svc: 'isc-kea-ctrl-agent.service'
+
+kea_svc_restart: true
+
+kea_dhcp4_enable: false
+kea_dhcp6_enable: false
+kea_ddns_enable: false
+kea_ctrl_agent_enable: false
+
+kea_config_path: "/etc/kea"
+
+kea_user: "_kea"
+kea_group: "_kea"
+
+kea_packages:
+  - isc-kea-admin
+  - isc-kea-ctrl-agent
+  - isc-kea-dhcp-ddns-server
+  - isc-kea-dhcp4-server
+  - isc-kea-dhcp6-server
+  - isc-kea-doc
+
+kea_apt_repository: "deb https://dl.cloudsmith.io/public/isc/kea-2-0/deb/debian bullseye main"
+kea_apt_src_repository: "deb-src https://dl.cloudsmith.io/public/isc/kea-2-0/deb/debian bullseye main"
+
+# All of these are from examples in the Kea documentation, just translated from
+# JSON to YAML. If you hate YAML, you can use JSON instead as it's considered a
+# subset of YAML.
+
+kea_dhcp4_config:
+  Dhcp4:
+    dhcp-ddns:
+      enable-updates: true
+      qualifying-suffix: "home.arpa."
+
+    interfaces-config:
+      interfaces: []
+
+    lease-database:
+      name: "/var/db/kea/dhcp4.leases"
+      persist: true
+      type: "memfile"
+
+    loggers:
+      - name: "kea-dhcp4"
+        severity: "DEBUG"
+        output_options:
+          - output: "/var/log/kea-dhcp4.log"
+            maxsize: 1048576
+            maxver: 8
+      - name: "kea-dhcp4.ddns"
+        severity: "DEBUG"
+        output_options:
+          - output: "/var/log/kea-dhcp4.ddns.log"
+            maxsize: 1048576
+            maxver: 8
+
+    rebind-timer: 2000
+    renew-timer: 1000
+    valid-lifetime: 4000
+
+    subnet4: []
+
+kea_dhcp6_config:
+  Dhcp6:
+    dhcp-ddns:
+      enable-updates: true
+      qualifying-suffix: "home.arpa."
+
+    interfaces-config:
+      interfaces: []
+
+    lease-database:
+      name: "/var/db/kea/dhcp6.leases"
+      persist: true
+      type: "memfile"
+
+    loggers:
+      - name: "kea-dhcp6"
+        severity: "DEBUG"
+        output_options:
+          - output: "/var/log/kea-dhcp6.log"
+            maxsize: 1048576
+            maxver: 8
+      - name: "kea-dhcp6.ddns"
+        severity: "DEBUG"
+        output_options:
+          - output: "/var/log/kea-dhcp6.ddns.log"
+            maxsize: 1048576
+            maxver: 8
+
+    rebind-timer: 2000
+    renew-timer: 1000
+    valid-lifetime: 4000
+
+    subnet6: []
+
+kea_ddns_config:
+  DhcpDdns:
+    dns-server-timeout: 100
+    ip-address: "127.0.0.1"
+    ncr-format: "JSON"
+    ncr-protocol: "UDP"
+    port: 53001
+
+    loggers:
+      - name: "kea-dhcp-ddns"
+        severity: "DEBUG"
+        output_options:
+          - output: "/var/log/kea-dhcp-ddns.log"
+            maxsize: 1048576
+            maxver: 8
+      - name: "kea-dhcp-ddns.dhcp-to-d2"
+        severity: "DEBUG"
+        output_options:
+          - output: "/var/log/kea-dhcp-ddns.dhcp-to-d2.log"
+            maxsize: 1048576
+            maxver: 8
+      - name: "kea-dhcp-ddns.d2-to-dns"
+        severity: "DEBUG"
+        output_options:
+          - output: "/var/log/kea-dhcp-ddns.d2-to-dns.log"
+            maxsize: 1048576
+            maxver: 8
+    forward-ddns: {}
+    reverse-ddns: {}
+    tsig-keys: {}
+
+kea_ctrl_agent_config:
+  Control-agent:
+    http-host: "10.20.30.40"
+    http-port: 8000
+    trust_anchor: "/path/to/the/ca-cert.pem"
+    cert-file: "/path/to/the/agent-cert.pem"
+    key-file: "/path/to/the/agent-key.pem"
+    cert-required: true
+    authentication:
+      type: "basic"
+      realm: kea-control-agent
+      clients:
+        - user: "admin"
+          password: "1234"
+    control-sockets:
+      dhcp4:
+        comment: "main server"
+        socket-type: "unix"
+        socket-name: "/path/to/the/unix/socket-v4"
+      dhcp6:
+        socket-type: "unix"
+        socket-name: "/path/to/the/unix/socket-v6"
+        user-context:
+          version: 3
+      d2:
+        socket-type: "unix"
+        socket-name: "/path/to/the/unix/socket-d2"
+    hooks-libraries:
+      - library: "/opt/local/control-agent-commands.so"
+        parameters:
+          param1: "foo"
+    loggers:
+      - name: "kea-ctrl-agent"
+        severity: "INFO"
