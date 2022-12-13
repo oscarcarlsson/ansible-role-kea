@@ -1,4 +1,20 @@
-# install deps
+---
+- name: Ensure keyring dependencies are installed
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - debian-keyring
+    - debian-archive-keyring
+    - apt-transport-https
+
+- name: Add ISC Kea apt repository key.
+  ansible.builtin.get_url:
+    url: "{{ kea_apt_keyring_url }}"
+    dest: "{{ kea_apt_keyring_path }}"
+    mode: '0644'
+    force: true
+
 - name: Ensure the official kea repository is enabled
   ansible.builtin.apt_repository:
     repo: "{{ kea_apt_repository }}"

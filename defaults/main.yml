@@ -24,8 +24,11 @@ kea_packages:
   - isc-kea-dhcp6-server
   - isc-kea-doc
 
-kea_apt_repository: "deb https://dl.cloudsmith.io/public/isc/kea-2-0/deb/debian bullseye main"
-kea_apt_src_repository: "deb-src https://dl.cloudsmith.io/public/isc/kea-2-0/deb/debian bullseye main"
+# https://kb.isc.org/docs/isc-kea-packages#using-the-cloudsmith-repositories
+kea_apt_repository: "deb https://dl.cloudsmith.io/public/isc/kea-2-2/deb/debian bullseye main"
+kea_apt_src_repository: "deb-src https://dl.cloudsmith.io/public/isc/kea-2-2/deb/debian bullseye main"
+kea_apt_keyring_url: "https://dl.cloudsmith.io/public/isc/kea-2-2/gpg.A8CB727C62565FF8.key"
+kea_apt_keyring_path: "/etc/apt/trusted.gpg.d/isc-kea-2-2-archive-keyring.asc"
 
 # All of these are from examples in the Kea documentation, just translated from
 # JSON to YAML. If you hate YAML, you can use JSON instead as it's considered a
